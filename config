@@ -1,0 +1,27 @@
+import { Component, OnInit , EventEmitter, Output } from '@angular/core';
+
+
+export class CONFIG {
+  // @Output() languageChanged = new EventEmitter();
+
+  constructor() {
+
+  }
+  
+  // public static API_ENDPOINT_URL = 'https://ifc.renault-india.com/_ifcapi';
+ public static API_ENDPOINT_URL = 'https://indiatest.tti-global.com/serviceadvisor/ifc/_ifcapi'; // for hit the dev backend url
+    //public static API_ENDPOINT_URL = 'https://renaultsmartadvisor.renault-india.com/tdbetaifc/_ifcapi'; // beta version
+  // public static API_ENDPOINT_URL = 'https://renaultsmartadvisor.renault-india.com/ifc/_ifcapi';
+  public static VEHICLE_MODEL_ENDPOINT_URL = 'https://https://myrenault.renault-india.com/_api/en_us/dataservice/vehicle_model';
+  
+
+  public static SITELANGUAGE='en_us';
+  // public static VEHICLE_MODEL_TOKEN='Ezpi8XsXmTM9hXhV3I8KLx7zexhyamTM9I8KLx7z';
+  // Common variables//
+  public static loggedIn: boolean;
+  public static version = '0_0_1';
+  // public static siteLang = 'en_us';
+  public static languageChanged=new EventEmitter();
+
+
+}

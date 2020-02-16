@@ -1,0 +1,212 @@
+import { HttpClientModule, HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
+import { CONFIG } from '../../app/ifc';
+import { LocalStorage } from './local_storage.service';
+
+@Injectable()
+export class HyperService {
+    public baseUrl = CONFIG.API_ENDPOINT_URL;
+    public Token: any = {};
+    // _jsonURL = 'assets/en_us.json';
+   
+    constructor(public http: HttpClient, public router: Router) {
+        this.http = http;
+        if (LocalStorage.isSetJWT()) {
+            LocalStorage.loadJWT()
+        } else {
+            LocalStorage.createJWT();
+        }
+        // Live
+        this.Token = JSON.parse(localStorage.getItem('userdata'))  
+        if(this.Token!=undefined && this.Token!=null ){
+            LocalStorage.setValue('token', this.Token.authtoken)
+        }else{
+            // TESTING
+            LocalStorage.setValue('token', 'TIuzTuqP3ABCIAlCr05sFCL8Gi0jV0pOJUnDpNsso356EqI5rOx6qje7BfqxgQlZKJC9w5BV9H2N7KSyzqFZJU6l9wSqmeq7X3hu8SphAr4HcXgLnWL7QRs0olqLzQTwUa123rkDTok5mBRKxDRnvkoTFOFfFyMzINCLeWo7lJdIk5sSIjfdDD7jsNy8lkI38kPmheuDXIliNNaw7pKL3R4wEDE0Xn45HTsZ7XC5FXntLxZTXKE0CJxhmc');
+        }
+    }
+
+    // public getJSON(jsonfilename): Observable<any> {
+    //     console.log(jsonfilename)
+    //   return this.http.get('assets/languages/'+ CONFIG.siteLang + '/'+jsonfilename+'.json');
+    // }
+
+    public get(endPoint: string) {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + LocalStorage.getValue('token'),
+            //   'Authorization' :  'Bearer ' + this.userToken,
+            'Cache-Control': 'no-cache',
+            'Request_type': 'web',
+            'Access-Control-Allow-Origin': '*'
+        });
+        const url = this.baseUrl + endPoint;
+        return this.http.get(url, { responseType: 'json', headers })
+            .toPromise()
+            .then((res: any) => {
+                return res;
+            }, (err) => {
+                if (err.error.status == 401) {
+                    this.logOut();
+                } else {
+                    return err.error
+                }
+            });
+    }
+
+    public getVehicleModel(endPoint: string) {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + LocalStorage.getValue('token'),
+            'Cache-Control': 'no-cache',
+            'Request_type': 'web',
+            'Access-Control-Allow-Origin': '*'
+        });
+        const url = this.baseUrl + endPoint;
+        return this.http.get(url, { responseType: 'json', headers })
+            .toPromise()
+            .then((res: any) => {
+                return res;
+            }, (err) => {
+                return err.error
+            });
+    }
+
+    // POST METHOD//
+    public post(endPoint: string, data: any, isJSON: boolean = true): any {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + LocalStorage.getValue('token'),
+            //   'Authorization' :  'Bearer ' + this.userToken,
+            'Cache-Control': 'no-cache',
+            'Request_type': 'web',
+            'Access-Control-Allow-Origin': '*'
+        });
+        let theBody: any;
+        if (isJSON) {
+            theBody = data;
+        } else {
+            theBody = data;
+        }
+        const options = {
+            headers
+        };
+        const url = this.baseUrl + endPoint;
+        return this.http.post(url, theBody, options)
+            .toPromise()
+            .then((res: any) => {
+                return res;
+            }, (err) => {
+                if (err.error.status == 401) {
+                    this.logOut();
+                } else {
+                    return err.error
+                }
+
+            });
+    }
+    // DELETE METHOD//
+    delete(endPoint: string, data: any, isJSON: boolean = true): any {
+        const headers = new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + LocalStorage.getValue('token'),
+            'Cache-Control': 'no-cache',
+            'Request_type': 'web',
+            'Access-Control-Allow-Origin': '*'
+        });
+        let theBody = {};
+        if (data !== undefined) {
+            theBody = (isJSON) ? JSON.stringify(data) : data;
+        }
+        const options = {
+            headers
+        };
+        const url = this.baseUrl + endPoint;
+        return this.http.delete(url, options)
+            .toPromise()
+            .then((res: any) => {
+                return res;
+            }, (err) => {
+                if (err.error.status == 401) {
+                    this.logOut();
+                } else {
+                    return err.error
+                }
+            });
+    }
+
+    public fileUpload(endPoint: string, data, tokenRequired, finalCallBack) {
+        let xhr;
+        if (XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        }
+        const formData = new FormData();
+        if (data !== undefined && data !== '') {
+            // tslint:disable-next-line:forin
+            for (const key in data) {
+                formData.append(key, data[key]);
+            }
+        }
+        // tslint:disable-next-line: only-arrow-functions
+        xhr.upload.addEventListener('progress', function (e) {
+            if (e.lengthComputable) {
+                const percentage = Math.round((e.loaded * 100) / e.total);
+                // progressCallBack(percentage);
+            }
+        }, false);
+        // tslint:disable-next-line: only-arrow-functions
+        xhr.upload.addEventListener('loadstart', function (e) {
+        }, false);
+        xhr.upload.addEventListener('load', function (e) {
+        }, false);
+        xhr.upload.addEventListener('error', function (e) {          
+        }, false);
+        xhr.onreadystatechange = function (e) {        
+      
+            if (this.readyState === 4 && this.status === 200) {
+                setTimeout(() => {
+                    if (finalCallBack !== undefined) { finalCallBack(xhr.responseText); }
+                }, 1000);
+            } else if (this.readyState === 4 && xhr.status === 406) {
+                setTimeout(() => {
+                    if (finalCallBack !== undefined) { finalCallBack(xhr.responseText); }
+                    // console.log(xhr.responseText)
+                }, 1000);
+            }
+        };
+        xhr.open('post', this.baseUrl + endPoint, true);
+        if (tokenRequired) { xhr.setRequestHeader('Authorization', 'Bearer ' + this.Token.authtoken); }
+        xhr.send(formData);
+    }
+
+    getFile() { 
+        return this.http.get('assets/'+CONFIG.SITELANGUAGE+'.json')
+            .toPromise()
+            .then((res: any) => {
+                return res;
+            }, (err) => {
+                if (err.error.status == 401) {
+                    this.logOut();
+                } else {
+                    return err.error
+                }
+            });
+    }
+
+    loggedIn() { 
+        return !!LocalStorage.getValue('token');
+    }
+
+    logOut() {
+        localStorage.removeItem('userdata');
+        // window.location.href = 'xifc/#/login';
+        // window.location.href = 'https://renaultsmartadvisor.renault-india.com/tdbetaifc/#/login';
+        // window.location.href = 'https://renaultsmartadvisor.renault-india.com/ifc/#/login';
+        // window.location.href = 'https://ifc.renault-india.com/#/login';
+        window.location.href = 'https://indiatest.tti-global.com/serviceadvisor/ifc/#/login';
+        // this.router.navigateByUrl('home/login');
+        LocalStorage.removeValue('token');
+        LocalStorage.removeValue('user_data');
+    }
+}
